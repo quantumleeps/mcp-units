@@ -39,8 +39,9 @@ def get_systems() -> list[str]:
 
 def get_system_units(system: str) -> list[str]:
     """Return all unit names belonging to a unit system."""
-    sys_obj = getattr(ureg.sys, system, None)
-    if sys_obj is None:
+    try:
+        sys_obj = getattr(ureg.sys, system)
+    except KeyError:
         return []
     return sorted(attr for attr in dir(sys_obj) if not attr.startswith("_"))
 
