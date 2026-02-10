@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=500"]
-        exclude: '(uv\.lock|pnpm-lock\.yaml)$'
+        exclude: '(uv\.lock|pnpm-lock\.yaml|eval/results\.json)$'
       - id: detect-private-key
       - id: check-merge-conflict
       - id: end-of-file-fixer

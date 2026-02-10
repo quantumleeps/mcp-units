@@ -16,6 +16,12 @@ dev = [
     "ruff",
     "pre-commit",
 ]
+eval = [
+    "anthropic",
+    "python-dotenv",
+    "matplotlib",
+    "datasets",
+]
 
 [project.scripts]
 mcp-units = "mcp_units.server:main"
