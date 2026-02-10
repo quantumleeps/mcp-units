@@ -2,8 +2,12 @@ FROM python:3.12-slim
 
 RUN pip install uv
 
-COPY . /app
+RUN useradd -m -u 1000 appuser
+
+COPY --chown=appuser:appuser . /app
 WORKDIR /app
+
+USER appuser
 
 RUN uv sync --frozen
 
