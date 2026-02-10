@@ -11,7 +11,13 @@ from mcp_units.models import (
     SimplifyError,
     SimplifyResult,
 )
-from mcp_units.registry import Q_, get_all_compatible_units, ureg
+from mcp_units.registry import (
+    get_all_compatible_units,
+    get_dimensions,
+    get_system_units,
+    get_systems,
+    ureg,
+)
 
 mcp = FastMCP("mcp-units")
 
@@ -26,9 +32,9 @@ def convert(
     if the units are dimensionally incompatible.
     """
     try:
-        source = Q_(value, from_unit)
+        source = ureg.Quantity(value, from_unit)
         target = source.to(to_unit)
-        factor = Q_(1, from_unit).to(to_unit).magnitude
+        factor = ureg.Quantity(1, from_unit).to(to_unit).magnitude
         return ConversionResult(
             input_value=value,
             input_unit=from_unit,
@@ -41,8 +47,8 @@ def convert(
         return ConversionError(
             input_unit=from_unit,
             target_unit=to_unit,
-            input_dimensionality=str(Q_(1, from_unit).dimensionality),
-            target_dimensionality=str(Q_(1, to_unit).dimensionality),
+            input_dimensionality=str(ureg.Quantity(1, from_unit).dimensionality),
+            target_dimensionality=str(ureg.Quantity(1, to_unit).dimensionality),
             error=f"Cannot convert {from_unit} to {to_unit}: incompatible dimensions",
         )
     except pint.UndefinedUnitError as e:
@@ -62,8 +68,8 @@ def check_compatibility(unit_a: str, unit_b: str) -> CompatibilityResult:
     Returns whether the units share the same physical dimension.
     """
     try:
-        q_a = Q_(1, unit_a)
-        q_b = Q_(1, unit_b)
+        q_a = ureg.Quantity(1, unit_a)
+        q_b = ureg.Quantity(1, unit_b)
     except pint.UndefinedUnitError as e:
         return CompatibilityResult(
             unit_a=unit_a,
@@ -126,7 +132,7 @@ def list_compatible_units(unit: str) -> CompatibleUnits | ParseError:
     including imperial and US customary units.
     """
     try:
-        q = Q_(1, unit)
+        q = ureg.Quantity(1, unit)
     except pint.UndefinedUnitError as e:
         return ParseError(expression=unit, error=str(e))
 
@@ -162,6 +168,56 @@ def simplify(expression: str) -> SimplifyResult | SimplifyError:
         ValueError,
     ) as e:
         return SimplifyError(expression=expression, error=str(e))
+
+
+# --- Resources ---
+
+
+@mcp.resource("units://systems")
+def systems_index() -> str:
+    """List all available unit systems (e.g., SI, imperial, US)."""
+    return "\n".join(get_systems())
+
+
+@mcp.resource("units://systems/{system}")
+def system_units(system: str) -> str:
+    """List all units belonging to a specific unit system."""
+    units = get_system_units(system)
+    if not units:
+        return f"Unknown system: {system}"
+    return "\n".join(units)
+
+
+@mcp.resource("units://dimensions")
+def dimensions_index() -> str:
+    """List all physical dimensions known to the registry."""
+    return "\n".join(get_dimensions())
+
+
+# --- Prompts ---
+
+
+@mcp.prompt
+def convert_document(document: str, target_system: str = "SI") -> str:
+    """Identify all quantities in a document and convert them."""
+    return (
+        f"Review the following document and find every physical quantity "
+        f"(numbers with units). Convert each one to {target_system} units. "
+        f"Present a table with columns: Original, Converted, Notes.\n\n"
+        f"Document:\n{document}"
+    )
+
+
+@mcp.prompt
+def check_calculations(calculations: str) -> str:
+    """Verify dimensional consistency of calculations."""
+    return (
+        "Check the following calculations for dimensional consistency. "
+        "Flag any operation where units don't match (e.g., adding "
+        "meters to seconds). For each step, show the units carried "
+        "through and whether the final result has correct dimensions."
+        f"\n\nCalculations:\n{calculations}"
+    )
 
 
 def main() -> None:

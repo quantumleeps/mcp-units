@@ -3,7 +3,6 @@ import warnings
 import pint
 
 ureg = pint.UnitRegistry()
-Q_ = ureg.Quantity
 
 
 def get_all_compatible_units(dimensionality: pint.util.UnitsContainer) -> list[str]:
@@ -31,3 +30,35 @@ def get_all_compatible_units(dimensionality: pint.util.UnitsContainer) -> list[s
             except Exception:
                 continue
     return sorted(seen.keys())
+
+
+def get_systems() -> list[str]:
+    """Return all unit system names from the registry."""
+    return sorted(attr for attr in dir(ureg.sys) if not attr.startswith("_"))
+
+
+def get_system_units(system: str) -> list[str]:
+    """Return all unit names belonging to a unit system."""
+    sys_obj = getattr(ureg.sys, system, None)
+    if sys_obj is None:
+        return []
+    return sorted(attr for attr in dir(sys_obj) if not attr.startswith("_"))
+
+
+def get_dimensions() -> list[str]:
+    """Return all unique non-dimensionless dimensionalities in the registry."""
+    dims: set[str] = set()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        for attr in dir(ureg):
+            if attr.startswith("_"):
+                continue
+            try:
+                unit = getattr(ureg, attr)
+                if hasattr(unit, "dimensionality"):
+                    d = str(unit.dimensionality)
+                    if d and d != "dimensionless":
+                        dims.add(d)
+            except Exception:
+                continue
+    return sorted(dims)
