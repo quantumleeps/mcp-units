@@ -1,0 +1,39 @@
+# leeper-ai shared pre-commit config
+# Copy this into each project repo and run: pre-commit install
+
+repos:
+  # -- Secrets & security --
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
+    hooks:
+      - id: gitleaks
+
+  # -- General hygiene --
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+        exclude: '(uv\.lock|pnpm-lock\.yaml)$'
+      - id: detect-private-key
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  # -- Python (ruff) --
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.7
+    hooks:
+      - id: ruff-format
+      - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+
+  # -- PII check (local) --
+  - repo: local
+    hooks:
+      - id: pii-check
+        name: PII pattern scan
+        entry: bash scripts/check-pii.sh
+        language: system
+        types: [text]
+        exclude: ^(tests/|test_|fixtures/|.*\.md$)

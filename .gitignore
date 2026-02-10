@@ -1,0 +1,49 @@
+# === Secrets & credentials ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+*secret*
+!*secret*.py
+!*secret*.ts
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+.coverage
+htmlcov/
+
+# === Node / TypeScript ===
+node_modules/
+.next/
+.biome/
+
+# === Data files (force-add if intentional) ===
+*.sqlite
+*.db
+*.parquet
+*.csv
+!fixtures/**/*.csv
+
+# === IDE ===
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+Thumbs.db
